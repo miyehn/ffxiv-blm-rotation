@@ -2,7 +2,7 @@
 	{
 		"date": "7/23/22",
 		"changes": [
-			"let tinctures have 1.19s animation lock",
+			"let tinctures have 1.16s animation lock",
 			"make lucid tick offset random relative to mp tick",
 			"use a checkbox to turn procs on/off"
 		]
