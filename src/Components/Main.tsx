@@ -13,7 +13,7 @@ import {GlobalHelpTooltip, Tabs} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
-import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent, ShellJob} from "../Controller/Common";
+import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent} from "../Controller/Common";
 
 export let setRealTime = (inRealTime: boolean) => {};
 export let setHistorical = (inHistorical: boolean) => {};
