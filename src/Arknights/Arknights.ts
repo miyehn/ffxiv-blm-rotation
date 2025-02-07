@@ -1,5 +1,3 @@
-import {MarkerType} from "../Controller/Timeline";
-
 type AkOperatorInfo = {
 	name: string,
 	color: string,
@@ -9,24 +7,28 @@ type AkOperatorInfo = {
 	abilityDuration: number
 }
 
-const akOperatorDefs: AkOperatorInfo[] = [
-	{
-		name: "伊内丝",
-		color: "#b50909",
-		redeploy: 35,
-		initialAbilityPt: 15,
-		abilityCd: 20,
-		abilityDuration: 12
-	},
-	{
-		name: "铃兰",
-		color: "#f3d043",
-		redeploy: 70,
-		initialAbilityPt: 50,
-		abilityCd: 70,
-		abilityDuration: 35
-	},
-];
+const akOperatorDefs = new Map<string, Omit<AkOperatorInfo, "name">>([
+	[
+		"伊内丝",
+		{
+			color: "#b50909",
+			redeploy: 35,
+			initialAbilityPt: 15,
+			abilityCd: 20,
+			abilityDuration: 12
+		},
+	],
+	[
+		"铃兰",
+		{
+			color: "#f3d043",
+			redeploy: 70,
+			initialAbilityPt: 50,
+			abilityCd: 70,
+			abilityDuration: 35
+		},
+	]
+]);
 
 export type AkOperatorState = "OP_READY" | "OP_DEPLOYED" | "ABILITY_READY" | "ABILITY" | "OP_COOLDOWN";
 export type AkOperatorAction = "DEPLOY" | "ABILITY_START" | "ABILITY_STOP" | "LEAVE";
@@ -107,6 +109,39 @@ export class AkOperator {
 				return []
 			}
 		}
+	}
+
+	serialized(): string {
+		let str = `${this.track} ${this.info.name}`;
+		this.actions.forEach((action) => {
+			str += `\n${action.time} ${action.action}`;
+		});
+		return str;
+	}
+
+	static parse(str: string): AkOperator {
+		const lines = str.split("\n");
+		const getTokens = function(line: string) {
+			return line.split(" ").filter(tok => { return tok.length > 0; }).map(tok => tok.trim());
+		}
+		const firstLine = getTokens(lines[0]);
+		const track = parseInt(firstLine[0]);
+		const name = firstLine[1];
+		const info: AkOperatorInfo = {
+			name,
+			...akOperatorDefs.get(name)!
+		};
+
+		const operator = new AkOperator(track, info);
+		for (let i = 1; i < lines.length; i++) {
+			const tokens = getTokens(lines[i]);
+			operator.actions.push({
+				time: parseFloat(tokens[0]),
+				action: tokens[1].toUpperCase() as AkOperatorAction,
+			});
+		}
+
+		return operator;
 	}
 
 	// an operator will get drawn onto a marker track (an operator is just a very complicated marker)

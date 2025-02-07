@@ -574,6 +574,9 @@ export class Timeline {
 	#save() {
 		let files = this.serializedSeparateMarkerTracks();
 		setCachedValue("timelineMarkers", JSON.stringify(files));
+
+		let serializedOperators = this.#akOperators.map(op => op.serialized());
+		setCachedValue("akOperators", JSON.stringify(serializedOperators));
 	}
 
 	#load() {
@@ -582,6 +585,14 @@ export class Timeline {
 			let files = JSON.parse(str);
 			files.forEach((f: Fixme) => {
 				this.#appendMarkersPreset(f, f.track, 0);
+			});
+		}
+
+		str = getCachedValue("akOperators");
+		if (str !== null) {
+			let ops = JSON.parse(str);
+			ops.forEach((op: Fixme) => {
+				this.#akOperators.push(AkOperator.parse(op));
 			});
 		}
 	}
