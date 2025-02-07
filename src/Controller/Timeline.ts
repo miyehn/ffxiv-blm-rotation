@@ -11,6 +11,7 @@ import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ResourceKey } from "../Game/Data";
+import {AkOperator} from "../Arknights/Arknights";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -33,6 +34,7 @@ export const enum MarkerType {
 	Info = "Info",
 	Untargetable = "Untargetable",
 	Buff = "Buff",
+	AkOperator = "Operator"
 }
 
 type TimelineElemBase = {
@@ -139,6 +141,7 @@ export class Timeline {
 	#allMarkers: MarkerElem[];
 	#untargetableMarkers: MarkerElem[];
 	#buffMarkers: MarkerElem[];
+	#akOperators: AkOperator[];
 
 	constructor() {
 		this.scale = 0.25;
@@ -150,6 +153,7 @@ export class Timeline {
 		this.#allMarkers = [];
 		this.#untargetableMarkers = [];
 		this.#buffMarkers = [];
+		this.#akOperators = [];
 		this.#load();
 	}
 
@@ -209,6 +213,12 @@ export class Timeline {
 		} else if (marker.markerType === MarkerType.Buff) {
 			this.#buffMarkers.push(marker);
 		}
+		this.drawElements();
+		this.#save();
+	}
+
+	addAkOperator(operator: AkOperator) {
+		this.#akOperators.push(operator);
 		this.drawElements();
 		this.#save();
 	}

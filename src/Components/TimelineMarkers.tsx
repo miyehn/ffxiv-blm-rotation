@@ -478,77 +478,91 @@ export class TimelineMarkers extends React.Component {
 					}
 				}}
 			>
-				<option value={MarkerType.Info}>{localize({ en: "Info", zh: "备注信息" })}</option>
+				<option value={MarkerType.Info}>{localize({en: "Info", zh: "备注信息"})}</option>
 				<option value={MarkerType.Untargetable}>
-					{localize({ en: "Untargetable", zh: "不可选中" })}
+					{localize({en: "Untargetable", zh: "不可选中"})}
 				</option>
-				<option value={MarkerType.Buff}>{localize({ en: "Buff", zh: "团辅" })}</option>
+				<option value={MarkerType.Buff}>{localize({en: "Buff", zh: "团辅"})}</option>
+				<option value={MarkerType.AkOperator}>{localize({en: "Operator", zh: "干员"})}</option>
 			</select>
-			<span> </span>
-			<Input
-				defaultValue={this.state.nextMarkerTime}
-				description={localize({ en: "Time: ", zh: "时间：" })}
-				width={8}
-				style={inlineDiv}
-				onChange={this.setTime}
-			/>
 
-			<Input
-				defaultValue={this.state.nextMarkerDuration}
-				description={localize({ en: "Duration: ", zh: "持续时长：" })}
-				width={8}
-				style={inlineDiv}
-				onChange={this.setDuration}
-			/>
+			{
+				this.state.nextMarkerType !== MarkerType.AkOperator ?
+					<>
+						<span> </span>
+						<Input
+							defaultValue={this.state.nextMarkerTime}
+							description={localize({en: "Time: ", zh: "时间："})}
+							width={8}
+							style={inlineDiv}
+							onChange={this.setTime}
+						/>
+						<Input
+							defaultValue={this.state.nextMarkerDuration}
+							description={localize({en: "Duration: ", zh: "持续时长："})}
+							width={8}
+							style={inlineDiv}
+							onChange={this.setDuration}
+						/>
+					</> : undefined
+			}
 
 			{this.state.nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
 			{this.state.nextMarkerType === MarkerType.Buff ? buffOnlySection : undefined}
+
+
 			<button
 				type={"submit"}
 				style={{ display: "block", marginTop: "0.5em" }}
 				onClick={(e) => {
-					let marker: MarkerElem = {
-						type: ElemType.Marker,
-						markerType: this.state.nextMarkerType,
-						time: parseTime(this.state.nextMarkerTime),
-						duration: parseFloat(this.state.nextMarkerDuration),
-						color: this.state.nextMarkerColor,
-						track: parseInt(this.state.nextMarkerTrack),
-						description: this.state.nextMarkerDescription,
-						showText: this.state.nextMarkerShowText,
-					};
-					let err: ContentNode | undefined = undefined;
-					if (this.state.nextMarkerType === MarkerType.Untargetable) {
-						marker.color = MarkerColor.Grey;
-						marker.track = UntargetableMarkerTrack;
-						marker.description = "";
-						marker.showText = true;
-					}
-					if (this.state.nextMarkerType === MarkerType.Buff) {
-						const buff = new Buff(this.state.nextMarkerBuff);
-						const duration = parseFloat(this.state.nextMarkerDuration);
-						if (!isNaN(duration) && duration > buff.info.duration) {
-							err = localize({
-								en: `this buff can't last longer than ${buff.info.duration}s`,
-								zh: `此团辅持续时间不能超过${buff.info.duration}秒`,
-							});
-						}
-						marker.color = buff.info.color;
-						marker.description = buff.name;
-						marker.duration = duration;
-						marker.showText = true;
-					}
-					if (isNaN(marker.duration) || isNaN(marker.time) || isNaN(marker.track)) {
-						err = localize({ en: "some input(s) are invalid", zh: "部分输入格式不对" });
-					}
-					if (err) {
-						window.alert(err);
+					if (this.state.nextMarkerType === MarkerType.AkOperator) {
+						console.log("todo: add operator here");
 						e.preventDefault();
-						return;
 					}
-					controller.timeline.addMarker(marker);
-					controller.updateStats();
-					e.preventDefault();
+					else {
+						let marker: MarkerElem = {
+							type: ElemType.Marker,
+							markerType: this.state.nextMarkerType,
+							time: parseTime(this.state.nextMarkerTime),
+							duration: parseFloat(this.state.nextMarkerDuration),
+							color: this.state.nextMarkerColor,
+							track: parseInt(this.state.nextMarkerTrack),
+							description: this.state.nextMarkerDescription,
+							showText: this.state.nextMarkerShowText,
+						};
+						let err: ContentNode | undefined = undefined;
+						if (this.state.nextMarkerType === MarkerType.Untargetable) {
+							marker.color = MarkerColor.Grey;
+							marker.track = UntargetableMarkerTrack;
+							marker.description = "";
+							marker.showText = true;
+						}
+						if (this.state.nextMarkerType === MarkerType.Buff) {
+							const buff = new Buff(this.state.nextMarkerBuff);
+							const duration = parseFloat(this.state.nextMarkerDuration);
+							if (!isNaN(duration) && duration > buff.info.duration) {
+								err = localize({
+									en: `this buff can't last longer than ${buff.info.duration}s`,
+									zh: `此团辅持续时间不能超过${buff.info.duration}秒`,
+								});
+							}
+							marker.color = buff.info.color;
+							marker.description = buff.name;
+							marker.duration = duration;
+							marker.showText = true;
+						}
+						if (isNaN(marker.duration) || isNaN(marker.time) || isNaN(marker.track)) {
+							err = localize({ en: "some input(s) are invalid", zh: "部分输入格式不对" });
+						}
+						if (err) {
+							window.alert(err);
+							e.preventDefault();
+							return;
+						}
+						controller.timeline.addMarker(marker);
+						controller.updateStats();
+						e.preventDefault();
+					}
 				}}
 			>
 				{localize({ en: "add marker", zh: "添加标记" })}
