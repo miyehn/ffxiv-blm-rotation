@@ -21,6 +21,8 @@ import {AkOperator, akStateManager} from "../Arknights/Arknights";
 
 export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
+export let setEditingAkOperator = (operator: AkOperator) => {};
+
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 
 const PRESET_MARKERS_BASE = "/presets/markers/";
@@ -124,6 +126,12 @@ export class TimelineMarkers extends React.Component {
 			}
 		};
 
+		setEditingAkOperator = (operator: AkOperator) => {
+			this.setState({
+				nextOperator: operator.serialized(),
+			});
+		}
+
 		this.onColorChange = (evt: ChangeEvent<{ value: string }>) => {
 			if (evt.target) {
 				this.setState({ nextMarkerColor: evt.target.value });
@@ -185,6 +193,7 @@ export class TimelineMarkers extends React.Component {
 	componentWillUnmount() {
 		updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 		setEditingMarkerValues = (marker) => {};
+		setEditingAkOperator = (operator: AkOperator) => {};
 	}
 
 	render() {

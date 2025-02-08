@@ -57,6 +57,7 @@ import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 import { getGameState } from "../Game/Jobs";
 import { localizeSkillName } from "../Components/Localization";
+import {akStateManager} from "../Arknights/Arknights";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -599,6 +600,8 @@ class Controller {
 			allMarkers: this.timeline.getAllMarkers(),
 			untargetableMarkers: this.timeline.getUntargetableMarkers(),
 			buffMarkers: this.timeline.getBuffMarkers(),
+			markerTracksCount: this.timeline.getNumMarkerTracks(),
+			akOperators: akStateManager.getOperators(),
 			showSelection: showSelection,
 			selectionStartDisplayTime:
 				(this.record.getFirstSelection()?.tmp_startLockTime ?? 0) -

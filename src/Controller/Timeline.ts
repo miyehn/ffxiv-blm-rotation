@@ -11,6 +11,7 @@ import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ResourceKey } from "../Game/Data";
+import {akStateManager} from "../Arknights/Arknights";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -513,6 +514,7 @@ export class Timeline {
 			maxTrack = Math.max(maxTrack, this.#allMarkers[i].track);
 			if (this.#allMarkers[i].track === UntargetableMarkerTrack) hasUntargetableTrack = true;
 		}
+		maxTrack = Math.max(maxTrack, akStateManager.getMaxTrack());
 		if (hasUntargetableTrack) return maxTrack + 2;
 		return maxTrack + 1;
 	}

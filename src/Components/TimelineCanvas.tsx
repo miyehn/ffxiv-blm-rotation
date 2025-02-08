@@ -30,13 +30,14 @@ import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
 import { localize, localizeBuffType, localizeSkillName } from "./Localization";
-import { setEditingMarkerValues } from "./TimelineMarkers";
-import { getCurrentThemeColors, MarkerColor, ThemeColors } from "./ColorTheme";
+import {setEditingAkOperator, setEditingMarkerValues} from "./TimelineMarkers";
+import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";
 import { ShellJob } from "../Game/Data/Jobs";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
+import {AkOperator, akStateManager} from "../Arknights/Arknights";
 
 export type TimelineRenderingProps = {
 	timelineWidth: number;
@@ -48,6 +49,8 @@ export type TimelineRenderingProps = {
 	allMarkers: MarkerElem[];
 	untargetableMarkers: MarkerElem[];
 	buffMarkers: MarkerElem[];
+	markerTracksCount: number;
+	akOperators: AkOperator[];
 	sharedElements: SharedTimelineElem[];
 	slots: {
 		job: ShellJob;
@@ -90,6 +93,8 @@ let g_renderingProps: TimelineRenderingProps = {
 	allMarkers: [],
 	untargetableMarkers: [],
 	buffMarkers: [],
+	markerTracksCount: 0,
+	akOperators: [],
 	untargetableMask: true,
 	sharedElements: [],
 	slots: [],
@@ -323,6 +328,35 @@ function drawMarkers(
 				);
 			}
 		}
+	});
+}
+
+function drawAkOperators(
+	countdown: number,
+	scale: number,
+	markerTracksTopY: number,
+	markerTracksBottomY: number,
+	timelineOrigin: number
+) {
+	g_renderingProps.akOperators.forEach(operator => {
+		let top = markerTracksBottomY - (operator.track + 1) * TimelineDimensions.trackHeight;
+		let left = timelineOrigin + StaticFn.positionFromTimeAndScale(0 + countdown, scale);
+		let width = StaticFn.positionFromTimeAndScale(1, scale);
+		let onClick = () => {
+			akStateManager.removeOperator(operator.info.name);
+			setEditingAkOperator(operator);
+		};
+
+		// todo: draw it in better style
+		g_ctx.fillStyle = operator.info.color + g_colors.timeline.markerAlpha;
+		g_ctx.fillRect(left, top, width, TimelineDimensions.trackHeight);
+
+		testInteraction({
+			x: left,
+			y: top,
+			w: width,
+			h: TimelineDimensions.trackHeight
+		}, [operator.info.name], onClick);
 	});
 }
 
@@ -947,13 +981,7 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 
 	// tracks background
 	g_ctx.beginPath();
-	let numTracks = 0;
-	let hasUntargetableTrack = false;
-	for (let k of trackBins.keys()) {
-		numTracks = Math.max(numTracks, k + 1);
-		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
-	}
-	if (hasUntargetableTrack) numTracks += 1;
+	let numTracks = g_renderingProps.markerTracksCount;
 	let markerTracksBottomY = originY + numTracks * TimelineDimensions.trackHeight;
 	g_ctx.fillStyle = g_colors.timeline.tracks;
 	for (let i = 0; i < numTracks; i += 2) {
@@ -970,6 +998,16 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 		markerTracksBottomY,
 		originX,
 		trackBins,
+	);
+
+	// arknights operators
+	drawAkOperators(
+		g_renderingProps.countdown,
+		g_renderingProps.scale,
+		originY,
+		markerTracksBottomY,
+		originX,
+		// todo: ?
 	);
 
 	return numTracks * TimelineDimensions.trackHeight;

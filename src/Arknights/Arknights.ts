@@ -1,4 +1,5 @@
 import {getCachedValue, setCachedValue} from "../Controller/Common";
+import {updateTimelineView} from "../Components/Timeline";
 
 type AkOperatorInfo = {
 	name: string,
@@ -164,23 +165,36 @@ export class AkOperator {
 }
 
 class AkStateManager {
-	#operators: Map<string, AkOperator>;
+	readonly #operators: Map<string, AkOperator>;
 	constructor() {
 		this.#operators = new Map();
 		this.#load();
-		console.log(this.#operators);
 	}
 
 	addOperator(operator: AkOperator) {
 		this.#operators.set(operator.info.name, operator);
+		updateTimelineView();
 		this.#save();
 	}
 
 	removeOperator(name: string) {
 		if (this.#operators.has(name)) {
 			this.#operators.delete(name);
+			updateTimelineView();
 			this.#save();
 		}
+	}
+
+	getMaxTrack() {
+		let maxTrack = -1;
+		this.#operators.forEach((operator) => {
+			maxTrack = Math.max(maxTrack, operator.track);
+		});
+		return maxTrack;
+	}
+
+	getOperators() {
+		return Array.from(this.#operators.values());
 	}
 
 	#load() {
