@@ -1,4 +1,4 @@
-import React, { ChangeEvent, CSSProperties } from "react";
+import React, {ChangeEvent, CSSProperties} from "react";
 import {
 	asyncFetch,
 	Columns,
@@ -10,13 +10,14 @@ import {
 	parseTime,
 	SaveToFile,
 } from "./Common";
-import { controller } from "../Controller/Controller";
-import { ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack } from "../Controller/Timeline";
-import { localize, localizeBuffType } from "./Localization";
-import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
-import { Buff, buffInfos } from "../Game/Buffs";
-import { BuffType } from "../Game/Common";
-import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
+import {controller} from "../Controller/Controller";
+import {ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
+import {localize, localizeBuffType} from "./Localization";
+import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
+import {Buff, buffInfos} from "../Game/Buffs";
+import {BuffType} from "../Game/Common";
+import {TIMELINE_COLUMNS_HEIGHT} from "./Timeline";
+import {AkOperator, akStateManager} from "../Arknights/Arknights";
 
 export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
@@ -36,6 +37,7 @@ type TimelineMarkersState = {
 	nextMarkerBuff: BuffType;
 	loadTrackDest: string;
 	offsetStr: string;
+	nextOperator: string;
 	/////////
 	trackBins: Map<number, MarkerElem[]>;
 };
@@ -111,7 +113,7 @@ export class TimelineMarkers extends React.Component {
 					nextMarkerTime: marker.time.toString(),
 					nextMarkerDuration: marker.duration.toString(),
 				});
-			} else {
+			} else if (marker.markerType === MarkerType.Buff) {
 				this.setState({
 					nextMarkerType: marker.markerType,
 					nextMarkerTrack: marker.track.toString(),
@@ -140,7 +142,7 @@ export class TimelineMarkers extends React.Component {
 		};
 
 		this.state = {
-			nextMarkerType: MarkerType.Info,
+			nextMarkerType: MarkerType.AkOperator,
 			nextMarkerColor: MarkerColor.Blue,
 			nextMarkerTime: "0",
 			nextMarkerDuration: "1",
@@ -150,6 +152,7 @@ export class TimelineMarkers extends React.Component {
 			nextMarkerBuff: BuffType.TechnicalFinish,
 			loadTrackDest: "0",
 			offsetStr: "",
+			nextOperator: "",
 			///////
 			trackBins: new Map(),
 		};
@@ -462,6 +465,8 @@ export class TimelineMarkers extends React.Component {
 			</div>
 		</>;
 
+		const colors = getCurrentThemeColors();
+
 		let addColumn = <form>
 			<span>{localize({ en: "Type: ", zh: "类型：" })}</span>
 			<select
@@ -507,16 +512,30 @@ export class TimelineMarkers extends React.Component {
 					</> : undefined
 			}
 
+			{
+				this.state.nextMarkerType === MarkerType.AkOperator ?
+					<textarea style={{
+						display: "block",
+						background: colors.background,
+						color: AkOperator.parse(this.state.nextOperator) ? colors.text : colors.warning,
+						outline: "none"
+					}} value={this.state.nextOperator} onChange={e => {
+						this.setState({nextOperator: e.target.value})
+					}} cols={40} rows={10}/> : undefined
+			}
+
 			{this.state.nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
 			{this.state.nextMarkerType === MarkerType.Buff ? buffOnlySection : undefined}
-
 
 			<button
 				type={"submit"}
 				style={{ display: "block", marginTop: "0.5em" }}
 				onClick={(e) => {
 					if (this.state.nextMarkerType === MarkerType.AkOperator) {
-						console.log("todo: add operator here");
+						const operator = AkOperator.parse(this.state.nextOperator);
+						if (operator) {
+							akStateManager.addOperator(operator);
+						}
 						e.preventDefault();
 					}
 					else {

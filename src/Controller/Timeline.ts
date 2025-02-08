@@ -11,7 +11,6 @@ import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ResourceKey } from "../Game/Data";
-import {AkOperator} from "../Arknights/Arknights";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -141,7 +140,6 @@ export class Timeline {
 	#allMarkers: MarkerElem[];
 	#untargetableMarkers: MarkerElem[];
 	#buffMarkers: MarkerElem[];
-	#akOperators: AkOperator[];
 
 	constructor() {
 		this.scale = 0.25;
@@ -153,7 +151,6 @@ export class Timeline {
 		this.#allMarkers = [];
 		this.#untargetableMarkers = [];
 		this.#buffMarkers = [];
-		this.#akOperators = [];
 		this.#load();
 	}
 
@@ -213,12 +210,6 @@ export class Timeline {
 		} else if (marker.markerType === MarkerType.Buff) {
 			this.#buffMarkers.push(marker);
 		}
-		this.drawElements();
-		this.#save();
-	}
-
-	addAkOperator(operator: AkOperator) {
-		this.#akOperators.push(operator);
 		this.drawElements();
 		this.#save();
 	}
@@ -574,9 +565,6 @@ export class Timeline {
 	#save() {
 		let files = this.serializedSeparateMarkerTracks();
 		setCachedValue("timelineMarkers", JSON.stringify(files));
-
-		let serializedOperators = this.#akOperators.map(op => op.serialized());
-		setCachedValue("akOperators", JSON.stringify(serializedOperators));
 	}
 
 	#load() {
@@ -585,14 +573,6 @@ export class Timeline {
 			let files = JSON.parse(str);
 			files.forEach((f: Fixme) => {
 				this.#appendMarkersPreset(f, f.track, 0);
-			});
-		}
-
-		str = getCachedValue("akOperators");
-		if (str !== null) {
-			let ops = JSON.parse(str);
-			ops.forEach((op: Fixme) => {
-				this.#akOperators.push(AkOperator.parse(op));
 			});
 		}
 	}
