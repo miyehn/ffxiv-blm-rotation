@@ -334,27 +334,151 @@ function drawMarkers(
 function drawAkOperators(
 	countdown: number,
 	scale: number,
-	markerTracksTopY: number,
 	markerTracksBottomY: number,
 	timelineOrigin: number
 ) {
+
+	type PxSegment = {
+		start: number,
+		end: number,
+		text?: string[]
+	};
+	const getSegments = (operator: AkOperator) => {
+		const deployed: PxSegment[] = [];
+		const redeploy: PxSegment[] = [];
+		const ability: PxSegment[] = [];
+		const abilityReady: number[] = [];
+
+		const timeToPx = (t: number) => timelineOrigin + StaticFn.positionFromTimeAndScale(t + countdown, scale);
+
+		// deployed segments
+		let lastDeployTime: number = -1;
+		let lastAbilityTime: number = -1;
+		operator.actions.forEach((action) => {
+			if (action.action === "DEPLOY") {
+				lastDeployTime = action.time;
+			} else if (action.action === "LEAVE") {
+				console.assert(lastDeployTime >= 0);
+				deployed.push({
+					start: timeToPx(lastDeployTime),
+					end: timeToPx(action.time)
+				});
+				lastDeployTime = -1;
+				redeploy.push({
+					start: timeToPx(action.time),
+					end: timeToPx(action.time + operator.info.redeploy),
+					text: [`[${action.time + operator.info.redeploy}] 再部署`],
+				});
+			} else if (action.action === "ABILITY_START") {
+				lastAbilityTime = action.time;
+			} else if (action.action === "ABILITY_STOP") {
+				console.assert(lastAbilityTime >= 0);
+				ability.push({
+					start: timeToPx(lastAbilityTime),
+					end: timeToPx(action.time),
+					text: [
+						`[${lastAbilityTime}] 开技能`,
+						`[${action.time}] 关技能`
+					]
+				});
+				const nextAbilityReady = action.time + operator.info.abilityCd;
+				if (operator.getState(nextAbilityReady) === "ABILITY_READY") {
+					abilityReady.push(nextAbilityReady);
+				}
+				lastAbilityTime = -1;
+			}
+			if (lastAbilityTime >= 0 && action.time >= lastAbilityTime + operator.info.abilityDuration) {
+				ability.push({
+					start: timeToPx(lastAbilityTime),
+					end: timeToPx(lastAbilityTime + operator.info.abilityDuration),
+					text: [`[${lastAbilityTime}] 开技能`]
+				});
+				const nextAbilityReady = lastAbilityTime + operator.info.abilityDuration + operator.info.abilityCd;
+				if (operator.getState(nextAbilityReady) === "ABILITY_READY") {
+					abilityReady.push(nextAbilityReady);
+				}
+				lastAbilityTime = -1;
+			}
+		});
+		if (lastDeployTime >= 0) {
+			deployed.push({
+				start: timeToPx(lastDeployTime),
+				end: g_renderingProps.timelineWidth // definitely beyond visible pos
+			});
+		}
+		if (lastAbilityTime >= 0) {
+			ability.push({
+				start: timeToPx(lastAbilityTime),
+				end: timeToPx(lastAbilityTime + operator.info.abilityDuration),
+				text: [`[${lastAbilityTime}] 开技能`]
+			});
+			const nextAbilityReady = lastAbilityTime + operator.info.abilityDuration + operator.info.abilityCd;
+			if (operator.getState(nextAbilityReady) === "ABILITY_READY") {
+				abilityReady.push(nextAbilityReady);
+			}
+		}
+
+		return {
+			deployed,
+			redeploy,
+			ability,
+			abilityReady
+		};
+	};
+
+	const drawSegment = (segment: PxSegment, track: number, height: number) => {
+		const top = markerTracksBottomY - (track + 1) * TimelineDimensions.trackHeight;
+		const verticalMidpoint = top + TimelineDimensions.trackHeight / 2;
+		const x = segment.start;
+		const y = verticalMidpoint - (height / 2);
+		const w = segment.end - segment.start;
+		g_ctx.fillRect(x, y, w, height);
+		if (segment.text) {
+			testInteraction({x, y, w, h: height}, segment.text);
+		}
+	};
+
 	g_renderingProps.akOperators.forEach(operator => {
 		let top = markerTracksBottomY - (operator.track + 1) * TimelineDimensions.trackHeight;
-		let left = timelineOrigin + StaticFn.positionFromTimeAndScale(0 + countdown, scale);
-		let width = StaticFn.positionFromTimeAndScale(1, scale);
+
+		const verticalMidpoint = top + TimelineDimensions.trackHeight / 2;
+
+		const segments = getSegments(operator);
+		// deployed segments
+		g_ctx.fillStyle = operator.info.color + "af";
+		segments.deployed.forEach(segment => {
+			drawSegment(segment, operator.track, 4);
+		});
+		// redeploy segments
+		g_ctx.fillStyle = g_colors.bgMediumContrast;
+		segments.redeploy.forEach(segment => {
+			drawSegment(segment, operator.track, 4);
+		});
+		// ability segments
+		g_ctx.fillStyle = operator.info.color + "ff";
+		segments.ability.forEach(segment => {
+			drawSegment(segment, operator.track, TimelineDimensions.trackHeight);
+		});
+		// ability ready
+		// todo (reference drawMPTickMarks)
+
+		// helper text
+		g_ctx.fillStyle = g_colors.emphasis;
+		g_ctx.fillText(
+			operator.info.name,
+			5 + TimelineDimensions.leftBufferWidth,
+			top + 10,
+		);
+
+		// for clicking it off
 		let onClick = () => {
 			akStateManager.removeOperator(operator.info.name);
 			setEditingAkOperator(operator);
 		};
-
-		// todo: draw it in better style
-		g_ctx.fillStyle = operator.info.color + g_colors.timeline.markerAlpha;
-		g_ctx.fillRect(left, top, width, TimelineDimensions.trackHeight);
-
 		testInteraction({
-			x: left,
+			x: TimelineDimensions.leftBufferWidth,
 			y: top,
-			w: width,
+			w: 40, // arbitrary
 			h: TimelineDimensions.trackHeight
 		}, [operator.info.name], onClick);
 	});
@@ -1004,10 +1128,8 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 	drawAkOperators(
 		g_renderingProps.countdown,
 		g_renderingProps.scale,
-		originY,
 		markerTracksBottomY,
-		originX,
-		// todo: ?
+		originX
 	);
 
 	return numTracks * TimelineDimensions.trackHeight;
