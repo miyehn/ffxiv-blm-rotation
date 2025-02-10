@@ -22,6 +22,36 @@ const akOperatorDefs = new Map<string, Omit<AkOperatorInfo, "name">>([
 		},
 	],
 	[
+		"桃金娘",
+		{
+			color: "#f388a8",
+			redeploy: 66,
+			initialAbilityPt: 13,
+			abilityCd: 22,
+			abilityDuration: 8,
+		},
+	],
+	[
+		"极境",
+		{
+			color: "#bbc7cd",
+			redeploy: 66,
+			initialAbilityPt: 15,
+			abilityCd: 26,
+			abilityDuration: 8,
+		},
+	],
+	[
+		"晓歌",
+		{
+			color: "#368ce1",
+			redeploy: 31,
+			initialAbilityPt: 20,
+			abilityCd: 25,
+			abilityDuration: 12,
+		},
+	],
+	[
 		"铃兰",
 		{
 			color: "#f3d043",

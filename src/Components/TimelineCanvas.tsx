@@ -384,7 +384,10 @@ function drawAkOperators(
 					ability.push({
 						start: timeToPx(lastAbilityTime),
 						end: timeToPx(action.time),
-						text: [`[${lastAbilityTime}] 开技能`],
+						text: [
+							`[${lastAbilityTime}] 开技能`,
+							`[${lastAbilityTime + operator.info.abilityDuration}] 结束`,
+						],
 					});
 					lastAbilityTime = -1;
 				}
@@ -393,7 +396,10 @@ function drawAkOperators(
 					ability.push({
 						start: timeToPx(lastAbilityTime),
 						end: timeToPx(lastAbilityTime + operator.info.abilityDuration),
-						text: [`[${lastAbilityTime}] 开技能`],
+						text: [
+							`[${lastAbilityTime}] 开技能`,
+							`[${lastAbilityTime + operator.info.abilityDuration}] 结束`,
+						],
 					});
 					addLineIfAbilityReady(
 						lastAbilityTime + operator.info.abilityDuration + operator.info.abilityCd,
@@ -417,7 +423,10 @@ function drawAkOperators(
 				ability.push({
 					start: timeToPx(lastAbilityTime),
 					end: timeToPx(lastAbilityTime + operator.info.abilityDuration),
-					text: [`[${lastAbilityTime}] 开技能`],
+					text: [
+						`[${lastAbilityTime}] 开技能`,
+						`[${lastAbilityTime + operator.info.abilityDuration}] 结束`,
+					],
 				});
 				addLineIfAbilityReady(
 					lastAbilityTime + operator.info.abilityDuration + operator.info.abilityCd,
@@ -436,7 +445,10 @@ function drawAkOperators(
 			ability.push({
 				start: timeToPx(lastAbilityTime),
 				end: timeToPx(lastAbilityTime + operator.info.abilityDuration),
-				text: [`[${lastAbilityTime}] 开技能`],
+				text: [
+					`[${lastAbilityTime}] 开技能`,
+					`[${lastAbilityTime + operator.info.abilityDuration}] 结束`,
+				],
 			});
 			addLineIfAbilityReady(
 				lastAbilityTime + operator.info.abilityDuration + operator.info.abilityCd,
@@ -469,7 +481,7 @@ function drawAkOperators(
 
 		const segments = getSegments(operator);
 		// deployed segments
-		g_ctx.fillStyle = operator.info.color + "af";
+		g_ctx.fillStyle = operator.info.color + "9f";
 		segments.deployed.forEach((segment) => {
 			drawSegment(segment, operator.track, 6);
 		});
@@ -481,7 +493,7 @@ function drawAkOperators(
 		// ability segments
 		g_ctx.fillStyle = operator.info.color + "ff";
 		segments.ability.forEach((segment) => {
-			drawSegment(segment, operator.track, TimelineDimensions.trackHeight);
+			drawSegment(segment, operator.track, 10);
 		});
 		// ability ready
 		g_ctx.lineWidth = 1;
