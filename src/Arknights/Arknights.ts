@@ -1,14 +1,14 @@
-import {getCachedValue, setCachedValue} from "../Controller/Common";
-import {updateTimelineView} from "../Components/Timeline";
+import { getCachedValue, setCachedValue } from "../Controller/Common";
+import { updateTimelineView } from "../Components/Timeline";
 
 type AkOperatorInfo = {
-	name: string,
-	color: string,
-	redeploy: number,
-	initialAbilityPt: number,
-	abilityCd: number,
-	abilityDuration: number
-}
+	name: string;
+	color: string;
+	redeploy: number;
+	initialAbilityPt: number;
+	abilityCd: number;
+	abilityDuration: number;
+};
 
 const akOperatorDefs = new Map<string, Omit<AkOperatorInfo, "name">>([
 	[
@@ -18,7 +18,7 @@ const akOperatorDefs = new Map<string, Omit<AkOperatorInfo, "name">>([
 			redeploy: 35,
 			initialAbilityPt: 15,
 			abilityCd: 20,
-			abilityDuration: 12
+			abilityDuration: 12,
 		},
 	],
 	[
@@ -28,22 +28,26 @@ const akOperatorDefs = new Map<string, Omit<AkOperatorInfo, "name">>([
 			redeploy: 70,
 			initialAbilityPt: 50,
 			abilityCd: 70,
-			abilityDuration: 35
+			abilityDuration: 35,
 		},
-	]
+	],
 ]);
 
-export type AkOperatorState = "OP_READY" | "OP_DEPLOYED" | "ABILITY_READY" | "ABILITY" | "OP_COOLDOWN";
+export type AkOperatorState =
+	| "OP_READY"
+	| "OP_DEPLOYED"
+	| "ABILITY_READY"
+	| "ABILITY"
+	| "OP_COOLDOWN";
 export type AkOperatorAction = "DEPLOY" | "ABILITY_START" | "ABILITY_STOP" | "LEAVE";
 
 // really just a fancy timeline marker
 export class AkOperator {
-
 	track: number;
 	info: AkOperatorInfo;
 	actions: {
-		time: number,
-		action: AkOperatorAction
+		time: number;
+		action: AkOperatorAction;
 	}[];
 
 	constructor(track: number, info: AkOperatorInfo) {
@@ -53,12 +57,16 @@ export class AkOperator {
 	}
 
 	getState(t: number): AkOperatorState {
+		const eps = 1e-6;
 		let state: AkOperatorState = "OP_READY";
 		for (let i = 0; i < this.actions.length; i++) {
 			if (this.actions[i].time > t) break;
 			switch (this.actions[i].action) {
 				case "DEPLOY": {
-					if (t - this.actions[i].time >= this.info.abilityCd - this.info.initialAbilityPt) {
+					if (
+						t - this.actions[i].time >=
+						this.info.abilityCd - this.info.initialAbilityPt - eps
+					) {
 						state = "ABILITY_READY";
 					} else {
 						state = "OP_DEPLOYED";
@@ -66,7 +74,12 @@ export class AkOperator {
 					break;
 				}
 				case "ABILITY_START": {
-					if (t - this.actions[i].time >= this.info.abilityDuration) {
+					if (
+						t - this.actions[i].time >=
+						this.info.abilityDuration + this.info.abilityCd - eps
+					) {
+						state = "ABILITY_READY";
+					} else if (t - this.actions[i].time >= this.info.abilityDuration - eps) {
 						state = "OP_DEPLOYED";
 					} else {
 						state = "ABILITY";
@@ -74,7 +87,7 @@ export class AkOperator {
 					break;
 				}
 				case "ABILITY_STOP": {
-					if (t - this.actions[i].time >= this.info.abilityCd) {
+					if (t - this.actions[i].time >= this.info.abilityCd - eps) {
 						state = "ABILITY_READY";
 					} else {
 						state = "OP_DEPLOYED";
@@ -82,7 +95,7 @@ export class AkOperator {
 					break;
 				}
 				case "LEAVE": {
-					if (t - this.actions[i].time >= this.info.redeploy) {
+					if (t - this.actions[i].time >= this.info.redeploy - eps) {
 						state = "OP_READY";
 					} else {
 						state = "OP_COOLDOWN";
@@ -97,19 +110,19 @@ export class AkOperator {
 		const currentState = this.getState(t);
 		switch (currentState) {
 			case "OP_READY": {
-				return ["DEPLOY"]
+				return ["DEPLOY"];
 			}
 			case "OP_DEPLOYED": {
-				return ["LEAVE"]
+				return ["LEAVE"];
 			}
 			case "ABILITY_READY": {
-				return ["ABILITY_START", "LEAVE"]
+				return ["ABILITY_START", "LEAVE"];
 			}
 			case "ABILITY": {
-				return ["ABILITY_STOP", "LEAVE"]
+				return ["ABILITY_STOP", "LEAVE"];
 			}
 			case "OP_COOLDOWN": {
-				return []
+				return [];
 			}
 		}
 	}
@@ -123,11 +136,17 @@ export class AkOperator {
 	}
 
 	static parse(str: string): AkOperator | undefined {
-		const getTokens = function(line: string) {
-			return line.split(" ").map(tok => tok.trim()).filter(tok => tok.length > 0);
-		}
-		const lines = str.split("\n").map((line) => line.trim()).filter(line => line.length > 0)
-			.map(line => getTokens(line));
+		const getTokens = function (line: string) {
+			return line
+				.split(" ")
+				.map((tok) => tok.trim())
+				.filter((tok) => tok.length > 0);
+		};
+		const lines = str
+			.split("\n")
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0)
+			.map((line) => getTokens(line));
 
 		if (lines.length === 0 || lines[0].length !== 2) return undefined;
 
@@ -138,12 +157,11 @@ export class AkOperator {
 
 		const info: AkOperatorInfo = {
 			name,
-			...akOperatorDefs.get(name)!
+			...akOperatorDefs.get(name)!,
 		};
 
 		const operator = new AkOperator(track, info);
 		for (let i = 1; i < lines.length; i++) {
-
 			const tokens = lines[i];
 			if (tokens.length !== 2) return undefined;
 
@@ -154,7 +172,7 @@ export class AkOperator {
 
 			operator.actions.push({
 				time,
-				action
+				action,
 			});
 		}
 
@@ -209,7 +227,7 @@ class AkStateManager {
 	}
 
 	#save() {
-		let serializedOperators = Array.from(this.#operators.values()).map(op => op.serialized());
+		let serializedOperators = Array.from(this.#operators.values()).map((op) => op.serialized());
 		setCachedValue("akOperators", JSON.stringify(serializedOperators));
 	}
 }

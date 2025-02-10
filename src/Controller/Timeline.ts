@@ -11,7 +11,7 @@ import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ResourceKey } from "../Game/Data";
-import {akStateManager} from "../Arknights/Arknights";
+import { akStateManager } from "../Arknights/Arknights";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -34,7 +34,7 @@ export const enum MarkerType {
 	Info = "Info",
 	Untargetable = "Untargetable",
 	Buff = "Buff",
-	AkOperator = "Operator"
+	AkOperator = "Operator",
 }
 
 type TimelineElemBase = {

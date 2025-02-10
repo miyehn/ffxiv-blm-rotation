@@ -1,4 +1,4 @@
-import React, {ChangeEvent, CSSProperties} from "react";
+import React, { ChangeEvent, CSSProperties } from "react";
 import {
 	asyncFetch,
 	Columns,
@@ -10,14 +10,14 @@ import {
 	parseTime,
 	SaveToFile,
 } from "./Common";
-import {controller} from "../Controller/Controller";
-import {ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
-import {localize, localizeBuffType} from "./Localization";
-import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
-import {Buff, buffInfos} from "../Game/Buffs";
-import {BuffType} from "../Game/Common";
-import {TIMELINE_COLUMNS_HEIGHT} from "./Timeline";
-import {AkOperator, akStateManager} from "../Arknights/Arknights";
+import { controller } from "../Controller/Controller";
+import { ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack } from "../Controller/Timeline";
+import { localize, localizeBuffType } from "./Localization";
+import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
+import { Buff, buffInfos } from "../Game/Buffs";
+import { BuffType } from "../Game/Common";
+import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
+import { AkOperator, akStateManager } from "../Arknights/Arknights";
 
 export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
@@ -130,7 +130,7 @@ export class TimelineMarkers extends React.Component {
 			this.setState({
 				nextOperator: operator.serialized(),
 			});
-		}
+		};
 
 		this.onColorChange = (evt: ChangeEvent<{ value: string }>) => {
 			if (evt.target) {
@@ -492,46 +492,54 @@ export class TimelineMarkers extends React.Component {
 					}
 				}}
 			>
-				<option value={MarkerType.Info}>{localize({en: "Info", zh: "备注信息"})}</option>
+				<option value={MarkerType.Info}>{localize({ en: "Info", zh: "备注信息" })}</option>
 				<option value={MarkerType.Untargetable}>
-					{localize({en: "Untargetable", zh: "不可选中"})}
+					{localize({ en: "Untargetable", zh: "不可选中" })}
 				</option>
-				<option value={MarkerType.Buff}>{localize({en: "Buff", zh: "团辅"})}</option>
-				<option value={MarkerType.AkOperator}>{localize({en: "Operator", zh: "干员"})}</option>
+				<option value={MarkerType.Buff}>{localize({ en: "Buff", zh: "团辅" })}</option>
+				<option value={MarkerType.AkOperator}>
+					{localize({ en: "Operator", zh: "干员" })}
+				</option>
 			</select>
 
-			{
-				this.state.nextMarkerType !== MarkerType.AkOperator ?
-					<>
-						<span> </span>
-						<Input
-							defaultValue={this.state.nextMarkerTime}
-							description={localize({en: "Time: ", zh: "时间："})}
-							width={8}
-							style={inlineDiv}
-							onChange={this.setTime}
-						/>
-						<Input
-							defaultValue={this.state.nextMarkerDuration}
-							description={localize({en: "Duration: ", zh: "持续时长："})}
-							width={8}
-							style={inlineDiv}
-							onChange={this.setDuration}
-						/>
-					</> : undefined
-			}
+			{this.state.nextMarkerType !== MarkerType.AkOperator ? (
+				<>
+					<span> </span>
+					<Input
+						defaultValue={this.state.nextMarkerTime}
+						description={localize({ en: "Time: ", zh: "时间：" })}
+						width={8}
+						style={inlineDiv}
+						onChange={this.setTime}
+					/>
+					<Input
+						defaultValue={this.state.nextMarkerDuration}
+						description={localize({ en: "Duration: ", zh: "持续时长：" })}
+						width={8}
+						style={inlineDiv}
+						onChange={this.setDuration}
+					/>
+				</>
+			) : undefined}
 
-			{
-				this.state.nextMarkerType === MarkerType.AkOperator ?
-					<textarea style={{
+			{this.state.nextMarkerType === MarkerType.AkOperator ? (
+				<textarea
+					style={{
 						display: "block",
 						background: colors.background,
-						color: AkOperator.parse(this.state.nextOperator) ? colors.text : colors.warning,
-						outline: "none"
-					}} value={this.state.nextOperator} onChange={e => {
-						this.setState({nextOperator: e.target.value})
-					}} cols={40} rows={10}/> : undefined
-			}
+						color: AkOperator.parse(this.state.nextOperator)
+							? colors.text
+							: colors.warning,
+						outline: "none",
+					}}
+					value={this.state.nextOperator}
+					onChange={(e) => {
+						this.setState({ nextOperator: e.target.value });
+					}}
+					cols={40}
+					rows={10}
+				/>
+			) : undefined}
 
 			{this.state.nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
 			{this.state.nextMarkerType === MarkerType.Buff ? buffOnlySection : undefined}
@@ -546,8 +554,7 @@ export class TimelineMarkers extends React.Component {
 							akStateManager.addOperator(operator);
 						}
 						e.preventDefault();
-					}
-					else {
+					} else {
 						let marker: MarkerElem = {
 							type: ElemType.Marker,
 							markerType: this.state.nextMarkerType,
@@ -580,7 +587,10 @@ export class TimelineMarkers extends React.Component {
 							marker.showText = true;
 						}
 						if (isNaN(marker.duration) || isNaN(marker.time) || isNaN(marker.track)) {
-							err = localize({ en: "some input(s) are invalid", zh: "部分输入格式不对" });
+							err = localize({
+								en: "some input(s) are invalid",
+								zh: "部分输入格式不对",
+							});
 						}
 						if (err) {
 							window.alert(err);
